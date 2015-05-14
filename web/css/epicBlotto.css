@@ -1,0 +1,68 @@
+.map {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+}
+
+.preloader {
+    position: absolute;
+    z-index: 1000;
+    font-size: 3em;
+    text-align: center;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    background: #ececec;
+}
+.preloader-content {
+    margin: 200px auto;
+    line-height: 50px;
+}
+
+.layer-switcher {
+    position: absolute;
+    top: 0;
+    right: 0;
+    background: white;
+    margin: 10px;
+    border: 1px solid black;
+    padding: 3px;
+}
+.layer-switcher .layer-list {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+}
+.layer-switcher .layer-list li {
+    display: inline-block;
+    margin: 0 5px;
+    padding: 4px;
+    background: #dddddd;
+    border: 1px solid #888;
+    cursor: pointer;
+}
+.layer-switcher .layer-list li.active {
+    background: #69d2e7;
+}
+
+
+
+.main-content {
+    display: none;
+}
+
+.path-step-icon {
+    width: 6px;
+    height: 6px;
+    background: white;
+    border: 1px solid black;
+}
+.mouse-marker-icon {
+    width: 10px;
+    height: 10px;
+    background: white;
+    border: 1px solid black;
+}

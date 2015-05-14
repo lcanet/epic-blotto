@@ -1,0 +1,2 @@
+# epic-blotto
+epic .blotto

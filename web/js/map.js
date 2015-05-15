@@ -185,8 +185,9 @@ angular.module('epicBlotto').directive('mapView', function($rootScope, $http, $l
                         lastAddedPoint = null;
                     }
 
-                    pathModel.clearSteps();
-                    refreshPathLayer();
+                    scope.$apply(function(){
+                        pathModel.clearSteps();
+                    });
                 }
             },  {
                 position: 'topleft'
@@ -214,15 +215,19 @@ angular.module('epicBlotto').directive('mapView', function($rootScope, $http, $l
                 }
             }
 
-            function refreshPathLayer() {
+            scope.$on('pathModelChanged', function(){
                 pathLayer.clearLayers();
 
                 _.each(pathModel.steps, function(step, index){
-                    pathLayer.addLayer(new L.Marker(step.from, {icon: pathStepIcon}));
+                    if (index === 0) {
+                        pathLayer.addLayer(new L.Marker(step.from, {icon: pathStepIcon}));
+
+                    }
+                    pathLayer.addLayer(new L.Marker(step.to, {icon: pathStepIcon}));
                     pathLayer.addLayer(new L.Polyline(step.line, { color: 'red', width: 16 }));
 
                 });
-            }
+            });
 
             map.on('mousemove', function(e){
                 if (drawPathActive) {
@@ -238,17 +243,26 @@ angular.module('epicBlotto').directive('mapView', function($rootScope, $http, $l
             map.on('click', function(e){
                 if (drawPathActive && currentMouseMarker) {
                     var position = currentMouseMarker.getLatLng();
+                    var previousLatLng;
                     if (lastAddedPoint) {
+                        previousLatLng = lastAddedPoint.getLatLng();
+                    } else if (pathModel.steps.length > 0) {
+                        var previousLatLng = pathModel.lastStep().to;
+                    }
+                    if (previousLatLng) {
                         scope.$apply(function(){
-                            pathModel.addStep(lastAddedPoint.getLatLng(), position);
+                            pathModel.addStep(previousLatLng, position);
                         });
-                        map.removeLayer(lastAddedPoint);
                     }
 
-                    refreshPathLayer();
-
-                    lastAddedPoint = new L.Marker(position, {icon: pathStepIcon});
-                    map.addLayer(lastAddedPoint);
+                    if (lastAddedPoint) {
+                        map.removeLayer(lastAddedPoint);
+                        lastAddedPoint = null;
+                    }
+                    if (pathModel.steps.length === 0) {
+                        lastAddedPoint = new L.Marker(position, {icon: pathStepIcon});
+                        map.addLayer(lastAddedPoint);
+                    }
                 }
             });
 

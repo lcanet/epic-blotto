@@ -41,6 +41,7 @@
         <tr>
             <th>Distance</th>
             <th>Denivellé</th>
+            <th>&nbsp;</th>
         </tr>
         </thead>
         <thead ng-show="path.steps.length > 1" class="total">
@@ -48,7 +49,7 @@
             <td>
                 {{ path.totalDistance | number:0 }}
             </td>
-            <td>
+            <td colspan="2">
                 {{ path.totalVerticalDifference | number:0 }}
             </td>
         </tr>
@@ -60,6 +61,9 @@
             </td>
             <td>
                 {{ s.verticalDifference | number:0}}
+            </td>
+            <td>
+                <a href="" ng-click="path.deleteStep($index)"><i class="fa fa-trash"></i> </a>
             </td>
         </tr>
         </tbody>

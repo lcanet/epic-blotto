@@ -1,16 +1,10 @@
-angular.module('epicBlotto').service('pathModel', function(epGraph){
+angular.module('epicBlotto').service('pathModel', function(epGraph, $rootScope){
 
     this.steps = [];
     this.totalDistance = 0;
     this.totalVerticalDifference = 0;
 
-    /**
-     *
-     * @param fromLatLng
-     * @param toLatLng
-     * @return {{}}
-     */
-    this.addStep = function(fromLatLng, toLatLng) {
+    var buildStep = function(fromLatLng, toLatLng){
 
         var calculatedPath = epGraph.findPath(fromLatLng, toLatLng);
 
@@ -36,9 +30,23 @@ angular.module('epicBlotto').service('pathModel', function(epGraph){
             }
         }
 
+        return step;
+    };
+
+
+    /**
+     *
+     * @param fromLatLng
+     * @param toLatLng
+     * @return {{}}
+     */
+    this.addStep = function(fromLatLng, toLatLng) {
+        var step = buildStep(fromLatLng, toLatLng);
+
         this.steps.push(step);
         this.totalDistance += step.distance;
         this.totalVerticalDifference += step.verticalDifference;
+        $rootScope.$broadcast('pathModelChanged');
         return step;
 
     };
@@ -50,6 +58,42 @@ angular.module('epicBlotto').service('pathModel', function(epGraph){
         this.steps = [];
         this.totalDistance = 0;
         this.totalVerticalDifference = 0;
+        $rootScope.$broadcast('pathModelChanged');
+    };
+
+    /**
+     *
+     * @param index
+     */
+    this.deleteStep = function(index) {
+        var step = this.steps[index];
+        this.totalDistance -= step.distance;
+        this.totalVerticalDifference -= step.verticalDifference;
+
+        if (index !== 0 && index !== this.steps.length - 1) {
+            var previousStep = this.steps[index-1];
+            var nextStep = this.steps[index+1];
+
+            this.totalDistance -= nextStep.distance;
+            this.totalVerticalDifference -= nextStep.verticalDifference;
+
+            var newNextStep = buildStep(previousStep.to, nextStep.to);
+            this.steps[index+1] = newNextStep;
+            this.totalDistance += newNextStep.distance;
+            this.totalVerticalDifference += newNextStep.verticalDifference;
+
+        }
+        this.steps.splice(index, 1);
+
+        $rootScope.$broadcast('pathModelChanged');
+    };
+
+    /**
+     *
+     * @return {*}
+     */
+    this.lastStep = function() {
+        return _.last(this.steps);
     };
 
 });

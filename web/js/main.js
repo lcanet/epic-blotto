@@ -35,4 +35,5 @@ angular.module('epicBlotto').controller('mainViewController', function($scope, p
 
     $scope.path = pathModel;
 
+
 });

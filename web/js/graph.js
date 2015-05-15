@@ -1,60 +1,38 @@
 angular.module('epicBlotto').service('epGraph', function ($log) {
-    var NODE_DELTA = 0.000001;
 
     var routeNodesGraph;
-
-    var positionEqual = function(node, latLng) {
-        return Math.abs(node.latlng.lat - latLng.lat) < NODE_DELTA &&
-            Math.abs(node.latlng.lng - latLng.lng) < NODE_DELTA
+    var buildGraphWorker = new Worker('js/worker/buildGraph.js');
+    buildGraphWorker.onmessage = function(e) {
+        var res = e.data;
+        $log.info('Graph parsing took ' + e.data.time + ' ms');
+        routeNodesGraph = e.data.result;
     };
 
-    var findOrCreateNode = function(latLng) {
-        var node;
-        for (var i = 0; i < routeNodesGraph.length; i++) {
-            node = routeNodesGraph[i];
-            if (positionEqual(node, latLng)) {
-                return node;
-            }
-        }
-        node = {
-            id: routeNodesGraph.length,
-            latlng: latLng,
-            next: []
-        };
-        routeNodesGraph.push(node);
-        return node;
-    };
-    var link = function(node1, node2){
-        node1.next.push(node2);
-        node2.next.push(node1);
-    };
 
     /**
-     * Refresh graph data from a geojson layer object
-     * @param routesLayer
+     * Refresh graph data from a geojson  object
+     * @param geojson
      */
-    this.feedGraphData = function(routesLayer) {
+    this.feedGraphData = function(geojson) {
         routeNodesGraph = [];
+        var lines = [];
 
-        var processLine = function(latlngs) {
-            var nodes = _.map(latlngs, findOrCreateNode);
-            for (var i = 1; i < nodes.length; i++) {
-                link(nodes[i], nodes[i-1]);
-            }
-        };
-        routesLayer.eachLayer(function(line){
-            if (line instanceof L.MultiPolyline) {
-                _.each(line.getLatLngs(), processLine);
-            } else if (line instanceof L.Polyline) {
-                processLine(line.getLatLngs());
+        _.each(geojson, function(feature){
+            if (feature.type === 'Feature' && feature.geometry){
+                if (feature.geometry.type === 'LineString') {
+                    lines.push(feature.geometry.coordinates);
+                } else if (feature.geometry.type === 'MultiLineString') {
+                    lines = lines.concat(feature.geometry.coordinates);
+                }
             }
         });
+        buildGraphWorker.postMessage({type: 'buildgraph', lines:lines});
     };
 
-    var findNearestNode = function(ll) {
+    var findNearestNode = function(latlng) {
         var closest = null, closestDistance = Infinity;
         _.each(routeNodesGraph, function(n){
-            var d = ll.distanceTo(n.latlng);
+            var d = nodeLatLon(n).distanceTo(latlng);
             if (d < closestDistance) {
                 closest = n;
                 closestDistance = d;
@@ -63,17 +41,27 @@ angular.module('epicBlotto').service('epGraph', function ($log) {
         return closest;
     };
 
-    var pseudoNode = function(ll) {
+    var pseudoNode = function(latlng) {
         return {
             id: -1,
-            latlng: ll
+            coordinate: [latlng.lng, latlng.lat, latlng.alt]
         };
     };
+
+    var nodeLatLon = function(node) {
+        return new L.LatLng(node.coordinate[1], node.coordinate[0], node.coordinate[2]);
+    };
+
+    var positionEqual = function(node, latLng) {
+        return nodeLatLon(node).distanceTo(latLng) < 1;
+    };
+
 
     /**
      * Find path from a node to another node
      */
     this.findPath = function(fromLatlng, toLatlng) {
+        var t0 = performance.now();
         var start = findNearestNode(fromLatlng);
         var end = findNearestNode(toLatlng);
 
@@ -86,11 +74,11 @@ angular.module('epicBlotto').service('epGraph', function ($log) {
         var closedList = {}, openList = {};
 
         function stepCost(fromNode, node) {
-            return fromNode.latlng.distanceTo(node.latlng);
+            return nodeLatLon(fromNode).distanceTo(nodeLatLon(node));
         }
 
         function heuristic(node) {
-            return node.latlng.distanceTo(toLatlng);
+            return nodeLatLon(node).distanceTo(toLatlng);
         }
 
         function makeStep(to, from, fromCost) {
@@ -121,7 +109,7 @@ angular.module('epicBlotto').service('epGraph', function ($log) {
             });
             if (queue.length === 0) {
                 cont = false;
-                console.log('No More nodes');
+                $log.error('No More nodes');
                 break;
             }
             var current = queue.shift();
@@ -185,8 +173,18 @@ angular.module('epicBlotto').service('epGraph', function ($log) {
                 path.push(pseudoNode(fromLatlng));
             }
         }
-
         path.reverse();
+
+        // transform to leaflet objects
+        path = _.map(path, function(node){
+            return {
+                id: node.id,
+                latlng: nodeLatLon(node)
+            };
+        });
+
+        var t1 = performance.now();
+        $log.info('Find path took ' + (t1-t0) + ' ms. found ' + path.length + ' nodes (closed ' + _.keys(closedList).length + ' / ' + routeNodesGraph.length + ')');
         return path;
     };
 

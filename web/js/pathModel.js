@@ -3,6 +3,9 @@ angular.module('epicBlotto').service('pathModel', function(epGraph, $rootScope){
     this.steps = [];
     this.totalDistance = 0;
     this.totalVerticalDifference = 0;
+    this.totalVerticalPositive = 0;
+    this.totalVerticalNegative = 0;
+
     this.totalGradient = 0;
 
     var buildStep = function(fromLatLng, toLatLng){
@@ -51,9 +54,13 @@ angular.module('epicBlotto').service('pathModel', function(epGraph, $rootScope){
         this.totalDistance = 0;
         this.totalVerticalDifference = 0;
         this.totalGradient = 0;
+        this.totalVerticalPositive = 0;
+        this.totalVerticalNegative = 0;
         _.each(this.steps, function(step){
             this.totalDistance += step.distance;
             this.totalVerticalDifference += step.verticalDifference;
+            this.totalVerticalPositive += step.verticalPositive;
+            this.totalVerticalNegative += step.verticalNegative;
         }, this);
 
         if (this.totalDistance !== 0){

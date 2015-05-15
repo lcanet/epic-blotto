@@ -52,6 +52,9 @@
             </td>
             <td>
                 {{ path.totalVerticalDifference | number:0 }}
+                <span class="vertical-diff-detail">
+                    ( + {{ path.totalVerticalPositive | number:0  }} / - {{ path.totalVerticalNegative | number:0  }} )
+                </span>
             </td>
             <td ng-class="getGradientClass(path.totalGradient)">
                 {{ path.totalGradient | number:1 }} %

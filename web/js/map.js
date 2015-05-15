@@ -101,17 +101,6 @@ angular.module('epicBlotto').directive('mapView', function($rootScope, $http, $l
 
             var routesLayer = L.geoJson([], {
                 style: styleFeature
-                /*
-                pointToLayer: function(feature, latLng) {
-                    var iconName = feature.properties.icon;
-                    var icon = iconsCache[iconName];
-                    if (!icon) {
-                        icon = L.divIcon({className: 'divicon wi wi-' +iconName, iconSize: [32, 32]});
-                        iconsCache[iconName] = icon;
-                    }
-                    return L.marker(latLng, {icon: icon});
-                }
-                 */
             });
             routesLayer.addTo(map);
 
@@ -124,7 +113,7 @@ angular.module('epicBlotto').directive('mapView', function($rootScope, $http, $l
                     routesLayer.clearLayers();
                     routesLayer.addData(res);
 
-                    epGraph.feedGraphData(routesLayer);
+                    epGraph.feedGraphData(res);
 
                 });
             };
@@ -285,8 +274,11 @@ angular.module('epicBlotto').directive('mapView', function($rootScope, $http, $l
                         }
 
                         mouseTooltipPopup.setLatLng(e.latlng);
-                        var dist = currentMouseLine.getLatLngs()[0].distanceTo(e.latlng).toFixed(1);
-                        mouseTooltipPopup.setContent(dist + ' m');
+                        var label = currentMouseLine.getLatLngs()[0].distanceTo(e.latlng).toFixed(1) + ' m';
+                        if (closest && closest.alt && closest.alt !== -99) {
+                            label += ' - altitude ' + closest.alt.toFixed(1) + ' m';
+                        }
+                        mouseTooltipPopup.setContent(label);
 
                     }
 

@@ -161,8 +161,8 @@ angular.module('epicBlotto').service('epGraph', function ($log) {
         if (!lastStep) {
             $log.warn('Cannot find any path to end node');
             // use direct line as a fallback
-            path.push(toLatlng);
-            path.push(fromLatlng);
+            path.push(pseudoNode(toLatlng));
+            path.push(pseudoNode(fromLatlng));
 
         } else {
 

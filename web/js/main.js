@@ -8,7 +8,7 @@ angular.module('epicBlotto').run(['$timeout', function($timeout) {
     }, 50);
 }]);
 
-angular.module('epicBlotto').controller('mainViewController', function($scope){
+angular.module('epicBlotto').controller('mainViewController', function($scope, pathModel){
 
     $scope.layers = [
         {
@@ -31,5 +31,8 @@ angular.module('epicBlotto').controller('mainViewController', function($scope){
     $scope.currentLayer = $scope.layers[0];
     $scope.selectLayer = function(l) {
         $scope.currentLayer = l;
-    }
+    };
+
+    $scope.path = pathModel;
+
 });

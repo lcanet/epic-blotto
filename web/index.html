@@ -5,7 +5,6 @@
     <title>Epic blotto</title>
     <!-- build:css css/vendor.css -->
     <link rel="stylesheet" href="libs/leaflet/dist/leaflet.css"/>
-    <link rel="stylesheet" href="libs/leaflet-draw/dist/leaflet.draw.css"/>
     <link rel="stylesheet" href="libs/font-awesome/css/font-awesome.min.css"/>
     <!-- endbuild -->
     <!-- build:css css/app.css -->
@@ -25,7 +24,7 @@
 </div>
 
 
-<map-view current-layer="currentLayer">
+<map-view current-layer="currentLayer" steps="steps">
 </map-view>
 
 <div class="layer-switcher">
@@ -36,6 +35,37 @@
     </ul>
 </div>
 
+<div class="step-list-panel" ng-show="path.steps.length > 0">
+    <table class="step-list">
+        <thead>
+        <tr>
+            <th>Distance</th>
+            <th>Denivellé</th>
+        </tr>
+        </thead>
+        <thead ng-show="path.steps.length > 1" class="total">
+        <tr>
+            <td>
+                {{ path.totalDistance | number:0 }}
+            </td>
+            <td>
+                {{ path.totalVerticalDifference | number:0 }}
+            </td>
+        </tr>
+        </thead>
+        <tbody>
+        <tr ng-repeat="s in path.steps">
+            <td>
+                {{ s.distance | number:0}}
+            </td>
+            <td>
+                {{ s.verticalDifference | number:0}}
+            </td>
+        </tr>
+        </tbody>
+    </table>
+
+</div>
 
 
 <!-- build:js js/vendor.js -->
@@ -51,6 +81,7 @@
 <!-- build:js js/app.js -->
 <script src="js/main.js"></script>
 <script src="js/map.js"></script>
+<script src="js/pathModel.js"></script>
 <script src="js/graph.js"></script>
 <!-- endbuild -->
 

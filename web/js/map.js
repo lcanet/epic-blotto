@@ -1,4 +1,4 @@
-angular.module('epicBlotto').directive('mapView', function($rootScope, $http, $log, epGraph){
+angular.module('epicBlotto').directive('mapView', function($rootScope, $http, $log, epGraph, pathModel){
 
     function styleFeature(feature) {
         switch (feature.properties.nature) {
@@ -47,8 +47,45 @@ angular.module('epicBlotto').directive('mapView', function($rootScope, $http, $l
                 $log.warn('Unknown feature type ', feature.properties.nature);
 
         }
-
     }
+
+    var DrawControl = L.Control.extend({
+
+        initialize: function(handler, options) {
+            L.Control.prototype.initialize.call(this, options);
+            this._handler = handler;
+        },
+
+        onAdd: function (map) {
+            var container = L.DomUtil.create('div', 'leaflet-bar');
+            this._map = map;
+            this._button = this._createButton('D', 'draw', 'draw-tool', container, this._handler, this);
+            return container;
+        },
+
+        _createButton: function (html, title, className, container, fn, context) {
+            var link = L.DomUtil.create('a', className, container);
+            link.innerHTML = html;
+            link.href = '#';
+            link.title = title;
+
+            var stop = L.DomEvent.stopPropagation;
+
+            L.DomEvent
+                .on(link, 'click', stop)
+                .on(link, 'mousedown', stop)
+                .on(link, 'dblclick', stop)
+                .on(link, 'click', L.DomEvent.preventDefault)
+                .on(link, 'click', fn, context)
+                .on(link, 'click', this._refocusOnMap, context);
+
+            return link;
+        }
+    });
+
+    var mouseMarkerIcon = new L.DivIcon({className: 'mouse-marker-icon'});
+    var pathStepIcon = new L.DivIcon({className: 'path-step-icon'});
+
 
     return {
         restrict: 'EA',
@@ -121,58 +158,39 @@ angular.module('epicBlotto').directive('mapView', function($rootScope, $http, $l
             /**
              * @type {L.FeatureGroup}
              */
-            var currentPathDrawLayer = new L.FeatureGroup();
-            currentPathDrawLayer.addTo(map);
-            var mouseMarkerIcon = new L.DivIcon({className: 'mouse-marker-icon'});
-            var pathStepIcon = new L.DivIcon({className: 'path-step-icon'});
+            var pathLayer = new L.FeatureGroup();
+            pathLayer.addTo(map);
+
+            /**
+             * temporary last added point
+             * @type {L.Marker}
+             */
+            var lastAddedPoint = null;
 
             /**
              * @type {L.Marker}
              */
-            var currentDrawMarker;
+            var currentMouseMarker;
 
-            var DrawControl = L.Control.extend({
+            new DrawControl(function(){
+                drawPathActive = !drawPathActive;
 
-                onAdd: function (map) {
-                    var container = L.DomUtil.create('div', 'leaflet-bar');
-                    this._map = map;
-                    this._button = this._createButton('D', 'draw', 'draw-tool', container, this._activate, this);
-                    return container;
-                },
-
-                _activate: function (e) {
-                    drawPathActive = !drawPathActive;
-
-                    if (!drawPathActive) {
-                        if (currentDrawMarker) {
-                            map.removeLayer(currentDrawMarker);
-                            currentDrawMarker = null;
-                        }
-
-                        currentPathDrawLayer.clearLayers();
+                if (!drawPathActive) {
+                    if (currentMouseMarker) {
+                        map.removeLayer(currentMouseMarker);
+                        currentMouseMarker = null;
                     }
-                },
+                    if (lastAddedPoint) {
+                        map.removeLayer(lastAddedPoint);
+                        lastAddedPoint = null;
+                    }
 
-                _createButton: function (html, title, className, container, fn, context) {
-                    var link = L.DomUtil.create('a', className, container);
-                    link.innerHTML = html;
-                    link.href = '#';
-                    link.title = title;
-
-                    var stop = L.DomEvent.stopPropagation;
-
-                    L.DomEvent
-                        .on(link, 'click', stop)
-                        .on(link, 'mousedown', stop)
-                        .on(link, 'dblclick', stop)
-                        .on(link, 'click', L.DomEvent.preventDefault)
-                        .on(link, 'click', fn, context)
-                        .on(link, 'click', this._refocusOnMap, context);
-
-                    return link;
+                    pathModel.clearSteps();
+                    refreshPathLayer();
                 }
-            });
-            new DrawControl({position: 'topleft'}).addTo(map);
+            },  {
+                position: 'topleft'
+            }).addTo(map);
 
             function distance(latlngA, latlngB) {
                 return map.latLngToLayerPoint(latlngA).distanceTo(map.latLngToLayerPoint(latlngB));
@@ -196,43 +214,44 @@ angular.module('epicBlotto').directive('mapView', function($rootScope, $http, $l
                 }
             }
 
+            function refreshPathLayer() {
+                pathLayer.clearLayers();
+
+                _.each(pathModel.steps, function(step, index){
+                    pathLayer.addLayer(new L.Marker(step.from, {icon: pathStepIcon}));
+                    pathLayer.addLayer(new L.Polyline(step.line, { color: 'red', width: 16 }));
+
+                });
+            }
+
             map.on('mousemove', function(e){
                 if (drawPathActive) {
-                    if (!currentDrawMarker) {
-                        currentDrawMarker = new L.Marker(e.latlng, {icon: mouseMarkerIcon});
-                        currentDrawMarker.addTo(map);
+                    if (!currentMouseMarker) {
+                        currentMouseMarker = new L.Marker(e.latlng, {icon: mouseMarkerIcon});
+                        currentMouseMarker.addTo(map);
                     }
+                    // snap
                     var closest = findClosest(e.latlng, 15);
-                    currentDrawMarker.setLatLng(closest ? closest : e.latlng);
+                    currentMouseMarker.setLatLng(closest ? closest : e.latlng);
                 }
             });
             map.on('click', function(e){
-                if (drawPathActive && currentDrawMarker) {
-                    currentPathDrawLayer.addLayer(new L.Marker(currentDrawMarker.getLatLng(), {icon: pathStepIcon}));
-
-                    var currentLayers = currentPathDrawLayer.getLayers();
-                    var line = _.find(currentLayers, function(layer){
-                        return layer instanceof L.Polyline;
-                    });
-                    if (!line) {
-                        if (currentLayers.length > 0) {
-                            line = new L.Polyline([currentLayers[0].getLatLng(), currentDrawMarker.getLatLng()], { color: 'red', width: 16 });
-                            currentPathDrawLayer.addLayer(line);
-                        }
-                    } else {
-                        var last = _.last(line.getLatLngs());
-                        var res = epGraph.findPath(last, currentDrawMarker.getLatLng());
-                        if (res) {
-                            _.each(res, function(node){
-                                line.addLatLng(node.latlng);
-                            });
-                        } else {
-                            line.addLatLng(currentDrawMarker.getLatLng());
-                        }
+                if (drawPathActive && currentMouseMarker) {
+                    var position = currentMouseMarker.getLatLng();
+                    if (lastAddedPoint) {
+                        scope.$apply(function(){
+                            pathModel.addStep(lastAddedPoint.getLatLng(), position);
+                        });
+                        map.removeLayer(lastAddedPoint);
                     }
 
+                    refreshPathLayer();
+
+                    lastAddedPoint = new L.Marker(position, {icon: pathStepIcon});
+                    map.addLayer(lastAddedPoint);
                 }
             });
+
         }
     }
 

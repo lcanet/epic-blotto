@@ -24,11 +24,14 @@
 </div>
 
 
-<map-view current-layer="currentLayer" steps="steps">
+<map-view current-layer="currentLayer" show-route-layer="showRouteLayer">
 </map-view>
 
 <div class="layer-switcher">
     <ul class="layer-list">
+        <li ng-class="{'active': showRouteLayer}" ng-click="toggleRouteLayer()">
+            Routes
+        </li>
         <li ng-repeat="l in layers" ng-class="{'active': l === currentLayer}" ng-click="selectLayer(l)">
             {{ l.name }}
         </li>

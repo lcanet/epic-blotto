@@ -29,8 +29,14 @@ angular.module('epicBlotto').controller('mainViewController', function($scope, p
     ];
 
     $scope.currentLayer = $scope.layers[0];
+    $scope.showRouteLayer = true;
+
     $scope.selectLayer = function(l) {
         $scope.currentLayer = l;
+    };
+
+    $scope.toggleRouteLayer = function() {
+        $scope.showRouteLayer = !$scope.showRouteLayer;
     };
 
     $scope.path = pathModel;

@@ -189,5 +189,21 @@ angular.module('epicBlotto').service('epGraph', function ($log) {
     };
 
 
+    this.findClosest = function(latLng, tolerance) {
+        var closest = null, closestDistance = Infinity;
+
+        _.each(routeNodesGraph, function(node) {
+            var d = latLng.distanceTo(nodeLatLon(node));
+            if (d < closestDistance){
+                closest = nodeLatLon(node);
+                closestDistance = d;
+            }
+        });
+
+        if (closestDistance < tolerance && closest != null) {
+            return closest;
+        }
+    };
+
 
 });

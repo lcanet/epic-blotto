@@ -92,7 +92,8 @@ angular.module('epicBlotto').directive('mapView', function($rootScope, $http, $l
         replace: true,
         template: '<div class="map"></div>',
         scope: {
-            currentLayer: '='
+            currentLayer: '=',
+            showRouteLayer: '='
         },
         link: function(scope, elt, attrs) {
             L.Icon.Default.imagePath = 'images';
@@ -104,20 +105,33 @@ angular.module('epicBlotto').directive('mapView', function($rootScope, $http, $l
             });
             routesLayer.addTo(map);
 
+            var lastRouteData;
 
             var refreshLayer = function() {
                 routesLayer.clearLayers();
                 var bounds = map.getBounds();
                 $http.get('/routes?minX=' + bounds.getSouth() +'&minY=' + bounds.getWest() +
                     '&maxX=' + bounds.getNorth() + '&maxY=' + bounds.getEast()).success(function(res){
+                    lastRouteData = res;
                     routesLayer.clearLayers();
-                    routesLayer.addData(res);
+                    if (scope.showRouteLayer) {
+                        routesLayer.addData(lastRouteData);
+                    }
 
                     epGraph.feedGraphData(res);
 
                 });
             };
             refreshLayer();
+
+            scope.$watch('showRouteLayer', function(show){
+                if (!show) {
+                    routesLayer.clearLayers();
+                } else if (lastRouteData) {
+                    routesLayer.clearLayers();
+                    routesLayer.addData(geojsonData);
+                }
+            });
 
             map.on('moveend', refreshLayer);
             map.on('zoomend', refreshLayer);
@@ -188,6 +202,8 @@ angular.module('epicBlotto').directive('mapView', function($rootScope, $http, $l
                         mouseTooltipPopup = null;
                     }
 
+                }
+                if (drawPathActive) {
                     scope.$apply(function(){
                         pathModel.clearSteps();
                     });
@@ -198,24 +214,6 @@ angular.module('epicBlotto').directive('mapView', function($rootScope, $http, $l
 
             function distance(latlngA, latlngB) {
                 return map.latLngToLayerPoint(latlngA).distanceTo(map.latLngToLayerPoint(latlngB));
-            }
-
-            function findClosest(latLng, tolerance) {
-                var closest = null, closestDistance = Infinity;
-
-                routesLayer.eachLayer(function(line){
-                    _.each(_.flatten(line.getLatLngs()), function(ll){
-                        var d = distance(latLng, ll);
-                        if (d < closestDistance){
-                            closest = ll;
-                            closestDistance = d;
-                        }
-                    });
-                });
-
-                if (closestDistance < tolerance && closest != null) {
-                    return closest;
-                }
             }
 
             scope.$on('pathModelChanged', function(){
@@ -258,7 +256,7 @@ angular.module('epicBlotto').directive('mapView', function($rootScope, $http, $l
                     }
 
                     // snap
-                    var closest = findClosest(e.latlng, 15);
+                    var closest = epGraph.findClosest(e.latlng, 15);
                     currentMouseMarker.setLatLng(closest ? closest : e.latlng);
 
                     // line to cursor

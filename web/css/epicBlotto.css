@@ -57,7 +57,7 @@
     margin: 10px;
     border: 1px solid black;
     padding: 3px;
-    width: 220px;
+    width: 250px;
     max-height: 400px;
     overflow-y: auto;
 
@@ -65,7 +65,26 @@
 
 .step-list thead.total {
     font-weight: bold;
+    background-color: #eee;
 
+}
+.step-list {
+    border-spacing: 0;
+}
+.step-list .vertical-diff-detail {
+    font-size: 9px;
+}
+.gradient-none {
+    color: #43ae27;
+}
+.gradient-small {
+    color: #e7e308;
+}
+.gradient-medium {
+    color: #ffb00f;
+}
+.gradient-hard {
+    color: #ff0800;
 }
 
 .path-step-icon {
@@ -79,4 +98,19 @@
     height: 10px;
     background: white;
     border: 1px solid black;
+}
+
+.distance-indicator-popup .leaflet-popup-tip-container {
+    display: none;
+}
+.distance-indicator-popup .leaflet-popup-content {
+    margin: 2px;
+}
+.distance-indicator-popup .leaflet-popup-content-wrapper {
+    border-radius: 0;
+    background: #eee;
+
+}.distance-indicator-popup  {
+    opacity: 0.7;
+
 }

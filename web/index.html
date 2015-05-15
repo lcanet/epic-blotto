@@ -39,8 +39,9 @@
     <table class="step-list">
         <thead>
         <tr>
-            <th>Distance</th>
-            <th>Denivellé</th>
+            <th>Distance (m)</th>
+            <th>Denivellé (m)</th>
+            <th>Gradient</th>
             <th>&nbsp;</th>
         </tr>
         </thead>
@@ -49,18 +50,30 @@
             <td>
                 {{ path.totalDistance | number:0 }}
             </td>
-            <td colspan="2">
+            <td>
                 {{ path.totalVerticalDifference | number:0 }}
+            </td>
+            <td ng-class="getGradientClass(path.totalGradient)">
+                {{ path.totalGradient | number:1 }} %
+            </td>
+            <td>
+                &nbsp;
             </td>
         </tr>
         </thead>
         <tbody>
-        <tr ng-repeat="s in path.steps">
+        <tr ng-repeat="s in path.steps" title="{{ s | diffLabel }}">
             <td>
                 {{ s.distance | number:0}}
             </td>
             <td>
                 {{ s.verticalDifference | number:0}}
+                <span class="vertical-diff-detail">
+                    ({{ s | diffLabel }})
+                </span>
+            </td>
+            <td ng-class="getGradientClass(s.gradient)">
+                {{ s.gradient | number:1 }} %
             </td>
             <td>
                 <a href="" ng-click="path.deleteStep($index)"><i class="fa fa-trash"></i> </a>
@@ -87,6 +100,7 @@
 <script src="js/map.js"></script>
 <script src="js/pathModel.js"></script>
 <script src="js/graph.js"></script>
+<script src="js/filters.js"></script>
 <!-- endbuild -->
 
 

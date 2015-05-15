@@ -3,6 +3,7 @@ angular.module('epicBlotto').service('pathModel', function(epGraph, $rootScope){
     this.steps = [];
     this.totalDistance = 0;
     this.totalVerticalDifference = 0;
+    this.totalGradient = 0;
 
     var buildStep = function(fromLatLng, toLatLng){
 
@@ -11,6 +12,9 @@ angular.module('epicBlotto').service('pathModel', function(epGraph, $rootScope){
         var step = {};
         step.distance = 0;
         step.verticalDifference = 0;
+        step.verticalPositive = 0;
+        step.verticalNegative = 0;
+        step.gradient = 0;
         step.from = fromLatLng;
         step.to = toLatLng;
         step.line = [];
@@ -25,12 +29,36 @@ angular.module('epicBlotto').service('pathModel', function(epGraph, $rootScope){
                 step.distance += currentPoint.distanceTo(prevPoint);
                 if (currentPoint.alt && currentPoint.alt !== -99 &&
                     prevPoint.alt && prevPoint.alt !== -99) {
-                    step.verticalDifference += (currentPoint.alt - prevPoint.alt);
+                    var diff = (currentPoint.alt - prevPoint.alt);
+                    step.verticalDifference += diff;
+                    if (diff < 0) {
+                        step.verticalNegative += Math.abs(diff);
+                    } else {
+                        step.verticalPositive += diff;
+                    }
                 }
             }
         }
 
+        if (step.distance !== 0) {
+            step.gradient = 100 * Math.abs(step.verticalDifference / step.distance);
+        }
+
         return step;
+    };
+
+    this.updateTotals = function(){
+        this.totalDistance = 0;
+        this.totalVerticalDifference = 0;
+        this.totalGradient = 0;
+        _.each(this.steps, function(step){
+            this.totalDistance += step.distance;
+            this.totalVerticalDifference += step.verticalDifference;
+        }, this);
+
+        if (this.totalDistance !== 0){
+            this.totalGradient = 100 * Math.abs(this.totalVerticalDifference / this.totalDistance);
+        }
     };
 
 
@@ -44,8 +72,7 @@ angular.module('epicBlotto').service('pathModel', function(epGraph, $rootScope){
         var step = buildStep(fromLatLng, toLatLng);
 
         this.steps.push(step);
-        this.totalDistance += step.distance;
-        this.totalVerticalDifference += step.verticalDifference;
+        this.updateTotals();
         $rootScope.$broadcast('pathModelChanged');
         return step;
 
@@ -56,8 +83,7 @@ angular.module('epicBlotto').service('pathModel', function(epGraph, $rootScope){
      */
     this.clearSteps = function(){
         this.steps = [];
-        this.totalDistance = 0;
-        this.totalVerticalDifference = 0;
+        this.updateTotals();
         $rootScope.$broadcast('pathModelChanged');
     };
 
@@ -67,23 +93,15 @@ angular.module('epicBlotto').service('pathModel', function(epGraph, $rootScope){
      */
     this.deleteStep = function(index) {
         var step = this.steps[index];
-        this.totalDistance -= step.distance;
-        this.totalVerticalDifference -= step.verticalDifference;
 
         if (index !== 0 && index !== this.steps.length - 1) {
             var previousStep = this.steps[index-1];
             var nextStep = this.steps[index+1];
-
-            this.totalDistance -= nextStep.distance;
-            this.totalVerticalDifference -= nextStep.verticalDifference;
-
-            var newNextStep = buildStep(previousStep.to, nextStep.to);
-            this.steps[index+1] = newNextStep;
-            this.totalDistance += newNextStep.distance;
-            this.totalVerticalDifference += newNextStep.verticalDifference;
+            this.steps[index+1] = buildStep(previousStep.to, nextStep.to);
 
         }
         this.steps.splice(index, 1);
+        this.updateTotals();
 
         $rootScope.$broadcast('pathModelChanged');
     };

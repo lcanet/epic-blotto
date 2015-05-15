@@ -35,5 +35,19 @@ angular.module('epicBlotto').controller('mainViewController', function($scope, p
 
     $scope.path = pathModel;
 
+    $scope.getGradientClass = function(gradient) {
+        var g = Math.abs(gradient);
+        if (g < 5) {
+            return 'gradient-none';
+        } else if (g < 10) {
+            return 'gradient-small';
+        } else if (g < 15) {
+            return 'gradient-medium';
+        } else {
+            return 'gradient-hard';
+
+        }
+    };
+
 
 });

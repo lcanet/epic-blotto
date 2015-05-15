@@ -171,6 +171,12 @@ angular.module('epicBlotto').directive('mapView', function($rootScope, $http, $l
              * @type {L.Marker}
              */
             var currentMouseMarker;
+            /**
+             *
+             * @type {L.Polyline}
+             */
+            var currentMouseLine;
+            var mouseTooltipPopup;
 
             new DrawControl(function(){
                 drawPathActive = !drawPathActive;
@@ -180,9 +186,17 @@ angular.module('epicBlotto').directive('mapView', function($rootScope, $http, $l
                         map.removeLayer(currentMouseMarker);
                         currentMouseMarker = null;
                     }
+                    if (currentMouseLine) {
+                        map.removeLayer(currentMouseLine);
+                        currentMouseLine = null;
+                    }
                     if (lastAddedPoint) {
                         map.removeLayer(lastAddedPoint);
                         lastAddedPoint = null;
+                    }
+                    if (mouseTooltipPopup) {
+                        map.removeLayer(mouseTooltipPopup);
+                        mouseTooltipPopup = null;
                     }
 
                     scope.$apply(function(){
@@ -227,28 +241,63 @@ angular.module('epicBlotto').directive('mapView', function($rootScope, $http, $l
                     pathLayer.addLayer(new L.Polyline(step.line, { color: 'red', width: 16 }));
 
                 });
+                if (currentMouseLine) {
+                    map.removeLayer(currentMouseLine);
+                    currentMouseLine = null;
+                }
+
             });
+
+            var getLastAddedLatLng = function() {
+                if (lastAddedPoint) {
+                    return  lastAddedPoint.getLatLng();
+                } else if (pathModel.steps.length > 0) {
+                    return pathModel.lastStep().to;
+                }
+            };
 
             map.on('mousemove', function(e){
                 if (drawPathActive) {
                     if (!currentMouseMarker) {
-                        currentMouseMarker = new L.Marker(e.latlng, {icon: mouseMarkerIcon});
-                        currentMouseMarker.addTo(map);
+                        currentMouseMarker = L.marker(e.latlng, {icon: mouseMarkerIcon}).addTo(map);
                     }
+                    if (!currentMouseLine) {
+                        var lastAdded = getLastAddedLatLng();
+                        if (lastAdded) {
+                            currentMouseLine = L.polyline([lastAdded, e.latlng], {weight: 4, color: '#d4e023', opacity: 0.5}).addTo(map);
+                        }
+                    }
+
                     // snap
                     var closest = findClosest(e.latlng, 15);
                     currentMouseMarker.setLatLng(closest ? closest : e.latlng);
+
+                    // line to cursor
+                    if (currentMouseLine) {
+                        currentMouseLine.spliceLatLngs(1, 1, e.latlng);
+
+                        // tooltip
+                        if (!mouseTooltipPopup){
+                            mouseTooltipPopup = L.popup({offset: L.point(50, 0), closeButton: false, autoPan: false, className: 'distance-indicator-popup'})
+                                .setLatLng(e.latlng)
+                                .setContent('...')
+                                .openOn(map);
+                        }
+
+                        mouseTooltipPopup.setLatLng(e.latlng);
+                        var dist = currentMouseLine.getLatLngs()[0].distanceTo(e.latlng).toFixed(1);
+                        mouseTooltipPopup.setContent(dist + ' m');
+
+                    }
+
+
+
                 }
             });
             map.on('click', function(e){
                 if (drawPathActive && currentMouseMarker) {
                     var position = currentMouseMarker.getLatLng();
-                    var previousLatLng;
-                    if (lastAddedPoint) {
-                        previousLatLng = lastAddedPoint.getLatLng();
-                    } else if (pathModel.steps.length > 0) {
-                        var previousLatLng = pathModel.lastStep().to;
-                    }
+                    var previousLatLng = getLastAddedLatLng();
                     if (previousLatLng) {
                         scope.$apply(function(){
                             pathModel.addStep(previousLatLng, position);
@@ -262,6 +311,15 @@ angular.module('epicBlotto').directive('mapView', function($rootScope, $http, $l
                     if (pathModel.steps.length === 0) {
                         lastAddedPoint = new L.Marker(position, {icon: pathStepIcon});
                         map.addLayer(lastAddedPoint);
+                    }
+                    if (currentMouseLine) {
+                        map.removeLayer(currentMouseLine);
+                        currentMouseLine = null;
+                    }
+                    if (mouseTooltipPopup){
+                        map.closePopup(mouseTooltipPopup);
+                        mouseTooltipPopup = null;
+
                     }
                 }
             });

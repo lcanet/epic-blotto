@@ -4,7 +4,7 @@ var pg = require('pg'),
     util = require('util');
 
 var pgConnectionString = 'postgres://bdtopo:bdtopo@192.168.0.2/bdtopo';
-var rowLimit = 1000;
+var rowLimit = 10000;
 
 function transformRows(result) {
     return _.map(result.rows, function(row){

@@ -58,8 +58,8 @@
     border: 1px solid black;
     padding: 3px;
     width: 250px;
-    max-height: 400px;
     overflow-y: auto;
+    bottom: 330px;
 
 }
 
@@ -113,4 +113,27 @@
 }.distance-indicator-popup  {
     opacity: 0.7;
 
+}
+
+.alt-profil-panel {
+    position: absolute;
+    bottom: 10px;
+    right: 0;
+    background: white;
+    margin: 10px;
+    border: 1px solid black;
+    padding: 3px;
+    font: 8px sans-serif;
+
+}
+
+.axis path,
+.axis line {
+    fill: none;
+    stroke: #000;
+    shape-rendering: crispEdges;
+}
+
+.area {
+    fill: steelblue;
 }

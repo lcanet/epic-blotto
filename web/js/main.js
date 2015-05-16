@@ -1,4 +1,4 @@
-angular.module('epicBlotto', ['ngRoute']);
+angular.module('epicBlotto', ['ngRoute', 'ngAnimate', 'toaster']);
 
 angular.module('epicBlotto').run(['$timeout', function($timeout) {
     $timeout(function(){

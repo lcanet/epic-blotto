@@ -6,6 +6,7 @@
     <!-- build:css css/vendor.css -->
     <link rel="stylesheet" href="libs/leaflet/dist/leaflet.css"/>
     <link rel="stylesheet" href="libs/font-awesome/css/font-awesome.min.css"/>
+    <link rel="stylesheet" href="libs/AngularJS-Toaster/toaster.min.css"/>
     <!-- endbuild -->
     <!-- build:css css/app.css -->
     <link rel="stylesheet" href="css/epicBlotto.css"/>
@@ -90,14 +91,23 @@
 
 </div>
 
+<div class="alt-profil-panel" ng-show="path.steps.length > 0">
+    <altitude-profile width="300" height="300"></altitude-profile>
+</div>
+
+
+<toaster-container toaster-options="{'position-class': 'toast-bottom-right'}"></toaster-container>
+
 
 <!-- build:js js/vendor.js -->
 <script src="libs/jquery/dist/jquery.js"></script>
 <script src="libs/lodash/lodash.js"></script>
 <script src="libs/angular/angular.js"></script>
 <script src="libs/angular-route/angular-route.min.js"></script>
-<script src="libs/leaflet/dist/leaflet-src.js"></script>
 <script src="libs/angular-animate/angular-animate.min.js"></script>
+<script src="libs/leaflet/dist/leaflet-src.js"></script>
+<script src="libs/AngularJS-Toaster/toaster.js"></script>
+<script src="libs/d3/d3.min.js"></script>
 <!-- endbuild -->
 
 
@@ -107,6 +117,8 @@
 <script src="js/pathModel.js"></script>
 <script src="js/graph.js"></script>
 <script src="js/filters.js"></script>
+<script src="js/altprofile.js"></script>
+
 <!-- endbuild -->
 
 

@@ -1,4 +1,4 @@
-angular.module('epicBlotto').directive('mapView', function($rootScope, $http, $log, epGraph, pathModel){
+angular.module('epicBlotto').directive('mapView', function($rootScope, $http, $log, toaster, epGraph, pathModel){
 
     function styleFeature(feature) {
         switch (feature.properties.nature) {
@@ -35,6 +35,7 @@ angular.module('epicBlotto').directive('mapView', function($rootScope, $http, $l
                 break;
             case 'Chemin':
             case 'Sentier':
+            case 'Escalier':
                 return {
                     color: '#0000d0',
                     weight: 3,
@@ -116,8 +117,11 @@ angular.module('epicBlotto').directive('mapView', function($rootScope, $http, $l
                     routesLayer.clearLayers();
                     if (scope.showRouteLayer) {
                         routesLayer.addData(lastRouteData);
-                    }
+                        if (res.length >= 5000) {
+                            toaster.pop('warning', 'Warning', 'Trop d\'objets dans la vue');
+                        }
 
+                    }
                     epGraph.feedGraphData(res);
 
                 });

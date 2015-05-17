@@ -133,7 +133,7 @@ angular.module('epicBlotto').directive('mapView', function($rootScope, $http, $l
                     routesLayer.clearLayers();
                 } else if (lastRouteData) {
                     routesLayer.clearLayers();
-                    routesLayer.addData(geojsonData);
+                    routesLayer.addData(lastRouteData);
                 }
             });
 

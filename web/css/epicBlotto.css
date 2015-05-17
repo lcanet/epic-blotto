@@ -137,3 +137,6 @@
 .area {
     fill: steelblue;
 }
+.clickable {
+    cursor: pointer;
+}

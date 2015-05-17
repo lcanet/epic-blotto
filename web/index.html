@@ -76,7 +76,10 @@
         <tbody>
         <tr ng-repeat="s in path.steps" title="{{ s | diffLabel }}">
             <td>
+                <span class="clickable" ng-click="zoomStep(s)">
                 {{ s.distance | number:0}}
+
+                </span>
             </td>
             <td>
                 {{ s.verticalDifference | number:0}}

@@ -318,6 +318,10 @@ angular.module('epicBlotto').directive('mapView', function($rootScope, $http, $l
                 }
             });
 
+            scope.$on('mapZoomStep', function($evt, step){
+                var bounds = new L.LatLngBounds(step.line);
+                map.fitBounds(bounds);
+            });
         }
     }
 

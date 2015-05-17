@@ -8,7 +8,7 @@ angular.module('epicBlotto').run(['$timeout', function($timeout) {
     }, 50);
 }]);
 
-angular.module('epicBlotto').controller('mainViewController', function($scope, pathModel, toaster){
+angular.module('epicBlotto').controller('mainViewController', function($rootScope, $scope, pathModel, toaster){
 
     $scope.layers = [
         {
@@ -55,11 +55,13 @@ angular.module('epicBlotto').controller('mainViewController', function($scope, p
         }
     };
 
+    $scope.zoomStep = function(step) {
+        $rootScope.$broadcast('mapZoomStep', step);
+    };
+
     $scope.exportPath = function() {
         try {
             var isFileSaverSupported = !!new Blob;
-
-
             var blob = new Blob([pathModel.exportKml()], {type: "text/plain;charset=utf-8"});
             saveAs(blob, "path.kml");
         } catch (e) {

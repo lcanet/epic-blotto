@@ -121,4 +121,34 @@ angular.module('epicBlotto').service('pathModel', function(epGraph, $rootScope){
         return _.last(this.steps);
     };
 
+
+    /**
+     *
+     */
+    this.exportKml = function(){
+        var str = '<kml xmlns="http://www.opengis.net/kml/2.2" xmlns:kml="http://www.opengis.net/kml/2.2">\n';
+        str += '<Document>';
+        str += '<Style id="styleRef">';
+        str += '<LineStyle><color>cc0000ff</color><width>4</width></LineStyle>';
+        str += '</Style>';
+        str += '<Placemark>';
+        str += '<styleUrl>#styleRef</styleUrl>';
+        str += '<LineString>';
+        str += '<tesselate>1</tesselate>';
+        str += '<coordinates>';
+        _.each(this.steps, function(step){
+            _.each(step.line, function(ll){
+                str += ll.lng;
+                str += ',';
+                str += ll.lat;
+                str += ',0 ';
+            });
+        });
+        str += '</coordinates>';
+        str += '</LineString>';
+        str += '</Placemark>';
+        str += '</Document>';
+        str += '</kml>';
+        return str;
+    };
 });

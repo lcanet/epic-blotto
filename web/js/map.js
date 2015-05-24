@@ -322,6 +322,13 @@ angular.module('epicBlotto').directive('mapView', function($rootScope, $http, $l
                 var bounds = new L.LatLngBounds(step.line);
                 map.fitBounds(bounds);
             });
+
+            scope.$on('mapZoomPoint', function($evt, feature){
+                if (feature && feature.geometry){
+                    map.setView(L.latLng(feature.geometry.coordinates[1],
+                        feature.geometry.coordinates[0]), 17);
+                }
+            });
         }
     }
 

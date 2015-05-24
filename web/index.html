@@ -29,6 +29,11 @@
 </map-view>
 
 <div class="layer-switcher">
+    <form ng-submit="geoloc()" class="geoloc-form">
+        <input type="text" class="geoloc-text" ng-enter="" ng-model="geolocInput"/>
+        <a class="geoloc-btn" href="" ng-click="geoloc()">Loc</a>
+
+    </form>
     <ul class="layer-list">
         <li ng-class="{'active': showRouteLayer}" ng-click="toggleRouteLayer()">
             Routes

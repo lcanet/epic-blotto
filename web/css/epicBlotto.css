@@ -35,6 +35,7 @@
     list-style-type: none;
     padding: 0;
     margin: 0;
+    display: inline-block;
 }
 .layer-switcher .layer-list li {
     display: inline-block;
@@ -47,7 +48,18 @@
 .layer-switcher .layer-list li.active {
     background: #69d2e7;
 }
+.geoloc-btn {
+    margin: 0 5px;
+    padding: 4px;
+    background: #dddddd;
+    border: 1px solid #888;
+    cursor: pointer;
 
+}
+
+.geoloc-form {
+    display: inline-block;
+}
 
 .step-list-panel {
     position: absolute;

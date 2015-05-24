@@ -8,7 +8,7 @@ angular.module('epicBlotto').run(['$timeout', function($timeout) {
     }, 50);
 }]);
 
-angular.module('epicBlotto').controller('mainViewController', function($rootScope, $scope, pathModel, toaster){
+angular.module('epicBlotto').controller('mainViewController', function($rootScope, $scope, $http, pathModel, toaster){
 
     $scope.layers = [
         {
@@ -30,6 +30,7 @@ angular.module('epicBlotto').controller('mainViewController', function($rootScop
 
     $scope.currentLayer = $scope.layers[0];
     $scope.showRouteLayer = true;
+    $scope.geolocInput = '';
 
     $scope.selectLayer = function(l) {
         $scope.currentLayer = l;
@@ -70,5 +71,15 @@ angular.module('epicBlotto').controller('mainViewController', function($rootScop
         }
     }
 
+    $scope.geoloc = function() {
+        if ($scope.geolocInput) {
+            $http.get('http://api-adresse.data.gouv.fr/search/?q=' + encodeURIComponent($scope.geolocInput)).success(function(res){
+                if (res && res.features && res.features.length > 0) {
+                    $rootScope.$broadcast('mapZoomPoint', res.features[0]);
+                }
+            });
+
+        }
+    }
 
 });

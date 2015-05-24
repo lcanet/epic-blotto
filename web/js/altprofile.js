@@ -1,4 +1,4 @@
-angular.module('epicBlotto').directive('altitudeProfile', function(pathModel){
+angular.module('epicBlotto').directive('altitudeProfile', function($rootScope, pathModel){
 
     function buildData() {
         var data = [];
@@ -14,7 +14,7 @@ angular.module('epicBlotto').directive('altitudeProfile', function(pathModel){
                 }
                 x += d;
                 if (latLng.alt !== -99 && latLng.alt) {
-                    data.push({x: x, y: latLng.alt});
+                    data.push({x: x, y: latLng.alt, pos: latLng});
                 }
                 prev = latLng;
             });
@@ -52,17 +52,77 @@ angular.module('epicBlotto').directive('altitudeProfile', function(pathModel){
                 .append('g')
                 .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
+            var lineFunction = d3.svg.line()
+                .x(function(d) { return d[0]; })
+                .y(function(d) { return d[1]; })
+                .interpolate("linear");
+
+            var hoverTimeout = null;
+
+            function zoomToPosition(data, dx) {
+                scope.$apply(function(){
+                    for (var i = 0; i < (data.length - 1); i++) {
+                        if (data[i].x >= dx) {
+                            $rootScope.$broadcast('mapZoomStep', [data[i].pos, data[i+1].pos]);
+                            break;
+                        }
+                    }
+                });
+            }
+
             function refreshPath() {
                 var data = buildData();
                 x.domain(d3.extent(data, function(d) { return d.x; }));
                 y.domain(d3.extent(data, function(d) { return d.y; }));
 
+                // clear content
                 svg.html('');
 
                 svg.append("path")
                     .datum(data)
                     .attr("class", "area")
-                    .attr("d", area);
+                    .attr("d", area)
+                    .on('mousemove', function(evt, a, b){
+                        var mpos = d3.mouse(this);
+                        var dx = x.invert(mpos[0]);
+                        if (hoverTimeout !== null) {
+                            clearTimeout(hoverTimeout);
+                        }
+
+                        hoverTimeout = setTimeout(function(){
+                            zoomToPosition(data, dx);
+                        }, 300);
+
+                        hoverLine1.attr('d', lineFunction([
+                            [mpos[0], 0],
+                            [mpos[0], height]
+                        ]));
+                        hoverLine2.attr('d', lineFunction([
+                            [0, mpos[1]],
+                            [width, mpos[1]]
+                        ]));
+                    })
+                    .on('mouseover', function(){
+                        hoverLine1.style('visibility', 'visible');
+                        hoverLine2.style('visibility', 'visible');
+                    })
+                    .on('click', function(){
+                        if (hoverTimeout !== null) {
+                            clearTimeout(hoverTimeout);
+                            hoverTimeout = null;
+                        }
+                        var mpos = d3.mouse(this);
+                        var dx = x.invert(mpos[0]);
+                        zoomToPosition(data, dx);
+                    })
+                    .on('mouseout', function() {
+                        hoverLine1.style('visibility', 'hidden');
+                        hoverLine2.style('visibility', 'hidden');
+                        if (hoverTimeout !== null) {
+                            clearTimeout(hoverTimeout);
+                            hoverTimeout = null;
+                        }
+                    });
                 svg.append("g")
                     .attr("class", "x axis")
                     .attr("transform", "translate(0," + height + ")")
@@ -71,6 +131,17 @@ angular.module('epicBlotto').directive('altitudeProfile', function(pathModel){
                     .attr("class", "y axis")
                     .call(yAxis)
                 ;
+
+                var hoverLine1 = svg.append('path')
+                    .attr("pointer-events", "none")
+                    .attr("stroke", "blue")
+                    .attr("stroke-width", 2)
+                    .attr("fill", "none");
+                var hoverLine2 = svg.append('path')
+                    .attr("pointer-events", "none")
+                    .attr("stroke", "blue")
+                    .attr("stroke-width", 2)
+                    .attr("fill", "none");
 
             }
 

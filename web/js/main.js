@@ -57,7 +57,7 @@ angular.module('epicBlotto').controller('mainViewController', function($rootScop
     };
 
     $scope.zoomStep = function(step) {
-        $rootScope.$broadcast('mapZoomStep', step);
+        $rootScope.$broadcast('mapZoomStep', step.line);
     };
 
     $scope.exportPath = function() {

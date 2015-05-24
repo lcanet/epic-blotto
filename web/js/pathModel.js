@@ -23,16 +23,19 @@ angular.module('epicBlotto').service('pathModel', function(epGraph, $rootScope){
         step.line = [];
         step.maxAltitude = 0;
 
+        var prevPointWithAlt = null;
+
         for (var i = 0; i < calculatedPath.length; i++) {
             var currentPoint = calculatedPath[i].latlng;
             step.line.push(currentPoint);
             step.maxAltitude = Math.max(step.maxAltitude, currentPoint.alt);
             if (i !== 0) {
-                var prevPoint = calculatedPath[i-1].latlng;
+                var prevPoint = calculatedPath[i - 1].latlng;
                 step.distance += currentPoint.distanceTo(prevPoint);
-                if (currentPoint.alt && currentPoint.alt !== -99 &&
-                    prevPoint.alt && prevPoint.alt !== -99) {
-                    var diff = (currentPoint.alt - prevPoint.alt);
+            }
+            if (currentPoint.alt && currentPoint.alt !== -99) {
+                if (prevPointWithAlt !== null) {
+                    var diff = (currentPoint.alt - prevPointWithAlt.alt);
                     step.verticalDifference += diff;
                     if (diff < 0) {
                         step.verticalNegative += Math.abs(diff);
@@ -40,6 +43,7 @@ angular.module('epicBlotto').service('pathModel', function(epGraph, $rootScope){
                         step.verticalPositive += diff;
                     }
                 }
+                prevPointWithAlt = currentPoint;
             }
         }
 

@@ -80,7 +80,7 @@
         </thead>
         <tbody>
         <tr ng-repeat="s in path.steps" title="{{ s | diffLabel }}">
-            <td>
+            <td title="Cumulé : {{ s.cumulatedDistance | number:0 }} m">
                 <span class="clickable" ng-click="zoomStep(s)">
                 {{ s.distance | number:0}}
 

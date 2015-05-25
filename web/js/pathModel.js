@@ -22,6 +22,7 @@ angular.module('epicBlotto').service('pathModel', function(epGraph, $rootScope){
         step.to = toLatLng;
         step.line = [];
         step.maxAltitude = 0;
+        step.cumulatedDistance = 0;
 
         var prevPointWithAlt = null;
 
@@ -65,6 +66,7 @@ angular.module('epicBlotto').service('pathModel', function(epGraph, $rootScope){
             this.totalVerticalDifference += step.verticalDifference;
             this.totalVerticalPositive += step.verticalPositive;
             this.totalVerticalNegative += step.verticalNegative;
+            step.cumulatedDistance = this.totalDistance;
         }, this);
 
         if (this.totalDistance !== 0){

@@ -243,7 +243,7 @@ function findPath(fromCoordinate, toCoordinate, callback) {
     maxLat += dLat;
     maxLon += dLon;
 
-    db.getRoutes(minLat, minLon, maxLat, maxLon, function(err, results){
+    db.getGeometries(minLat, minLon, maxLat, maxLon, function(err, results){
         if (err) return callback(err);
         var nodes = buildGraph(results);
         var path = calculatePath(nodes, fromCoordinate, toCoordinate);

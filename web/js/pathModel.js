@@ -1,4 +1,4 @@
-angular.module('epicBlotto').service('pathModel', function(epGraph, $rootScope){
+angular.module('epicBlotto').service('pathModel', function($http, $q, $rootScope){
 
     this.steps = [];
     this.totalDistance = 0;
@@ -9,50 +9,55 @@ angular.module('epicBlotto').service('pathModel', function(epGraph, $rootScope){
     this.totalGradient = 0;
 
     var buildStep = function(fromLatLng, toLatLng){
+        return $http.get('/path?lat1=' + fromLatLng.lat + '&lon1=' + fromLatLng.lng + '&lat2=' + toLatLng.lat + '&lon2=' + toLatLng.lng).then(function(res){
+            var calculatedPath = res.data;
+            var step = {};
+            step.distance = 0;
+            step.verticalDifference = 0;
+            step.verticalPositive = 0;
+            step.verticalNegative = 0;
+            step.gradient = 0;
+            step.from = fromLatLng;
+            step.to = toLatLng;
+            step.line = [];
+            step.maxAltitude = 0;
+            step.cumulatedDistance = 0;
 
-        var calculatedPath = epGraph.findPath(fromLatLng, toLatLng);
+            var prevPointWithAlt = null;
 
-        var step = {};
-        step.distance = 0;
-        step.verticalDifference = 0;
-        step.verticalPositive = 0;
-        step.verticalNegative = 0;
-        step.gradient = 0;
-        step.from = fromLatLng;
-        step.to = toLatLng;
-        step.line = [];
-        step.maxAltitude = 0;
-        step.cumulatedDistance = 0;
+            for (var i = 0; i < calculatedPath.length; i++) {
+                // add a latlng
+                var coord = calculatedPath[i].coordinate;
+                calculatedPath[i].latlng = new L.LatLng(coord[1], coord[0], coord[2]);
 
-        var prevPointWithAlt = null;
-
-        for (var i = 0; i < calculatedPath.length; i++) {
-            var currentPoint = calculatedPath[i].latlng;
-            step.line.push(currentPoint);
-            step.maxAltitude = Math.max(step.maxAltitude, currentPoint.alt);
-            if (i !== 0) {
-                var prevPoint = calculatedPath[i - 1].latlng;
-                step.distance += currentPoint.distanceTo(prevPoint);
-            }
-            if (currentPoint.alt && currentPoint.alt !== -99) {
-                if (prevPointWithAlt !== null) {
-                    var diff = (currentPoint.alt - prevPointWithAlt.alt);
-                    step.verticalDifference += diff;
-                    if (diff < 0) {
-                        step.verticalNegative += Math.abs(diff);
-                    } else {
-                        step.verticalPositive += diff;
-                    }
+                var currentPoint = calculatedPath[i].latlng;
+                step.line.push(currentPoint);
+                step.maxAltitude = Math.max(step.maxAltitude, currentPoint.alt);
+                if (i !== 0) {
+                    var prevPoint = calculatedPath[i - 1].latlng;
+                    step.distance += currentPoint.distanceTo(prevPoint);
                 }
-                prevPointWithAlt = currentPoint;
+                if (currentPoint.alt && currentPoint.alt !== -99) {
+                    if (prevPointWithAlt !== null) {
+                        var diff = (currentPoint.alt - prevPointWithAlt.alt);
+                        step.verticalDifference += diff;
+                        if (diff < 0) {
+                            step.verticalNegative += Math.abs(diff);
+                        } else {
+                            step.verticalPositive += diff;
+                        }
+                    }
+                    prevPointWithAlt = currentPoint;
+                }
             }
-        }
 
-        if (step.distance !== 0) {
-            step.gradient = 100 * Math.abs(step.verticalDifference / step.distance);
-        }
+            if (step.distance !== 0) {
+                step.gradient = 100 * Math.abs(step.verticalDifference / step.distance);
+            }
 
-        return step;
+            return step;
+        });
+
     };
 
     this.updateTotals = function(){
@@ -82,13 +87,12 @@ angular.module('epicBlotto').service('pathModel', function(epGraph, $rootScope){
      * @return {{}}
      */
     this.addStep = function(fromLatLng, toLatLng) {
-        var step = buildStep(fromLatLng, toLatLng);
-
-        this.steps.push(step);
-        this.updateTotals();
-        $rootScope.$broadcast('pathModelChanged');
-        return step;
-
+        buildStep(fromLatLng, toLatLng).then(_.bind(function(step){
+            this.steps.push(step);
+            this.updateTotals();
+            $rootScope.$broadcast('pathModelChanged');
+            return step;
+        }, this));
     };
 
     /**
@@ -107,16 +111,24 @@ angular.module('epicBlotto').service('pathModel', function(epGraph, $rootScope){
     this.deleteStep = function(index) {
         var step = this.steps[index];
 
+        var defer = $q.defer();
+
         if (index !== 0 && index !== this.steps.length - 1) {
             var previousStep = this.steps[index-1];
             var nextStep = this.steps[index+1];
-            this.steps[index+1] = buildStep(previousStep.to, nextStep.to);
-
+            buildStep(previousStep.to, nextStep.to).then(_.bind(function(step){
+                this.steps[index+1] = step;
+                defer.resolve();
+            }, this));
+        } else {
+            defer.resolve();
         }
-        this.steps.splice(index, 1);
-        this.updateTotals();
 
-        $rootScope.$broadcast('pathModelChanged');
+        defer.promise.then(_.bind(function(){
+            this.steps.splice(index, 1);
+            this.updateTotals();
+            $rootScope.$broadcast('pathModelChanged');
+        }, this));
     };
 
     /**

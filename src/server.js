@@ -1,11 +1,11 @@
 
 var express = require('express'),
     http = require('http'),
-    path = require('path'),
     winston = require('winston'),
     _ = require('lodash'),
     request = require('request'),
-    db = require('./db')
+    db = require('./db'),
+    graph = require('./graph')
     ;
 
 winston.level = 'debug';
@@ -36,6 +36,27 @@ app.get('/routes', function(req, res){
     }
 
     db.getRoutes(minLat, minLon, maxLat, maxLon, function(err, result){
+        if (err) sendError(res, err);
+        else res.jsonp(result);
+    });
+});
+
+
+app.get('/path', function(req, res){
+    var lat1 = parseFloat(req.query.lat1);
+    var lon1 = parseFloat(req.query.lon1);
+    var lat2 = parseFloat(req.query.lat2);
+    var lon2 = parseFloat(req.query.lon2);
+    var alt1 = parseFloat(req.query.alt1) || -99;
+    var alt2 = parseFloat(req.query.alt2) || -99;
+    if (!lat1 || !lon1 || !lat2 || !lon2) {
+        return sendError(res, 'No coordinates provided');
+    }
+
+    var fromCoordinate = [lon1, lat1, alt1];
+    var toCoordinate = [lon2, lat2, alt2];
+
+    graph.findPath(fromCoordinate, toCoordinate, function(err, result){
         if (err) sendError(res, err);
         else res.jsonp(result);
     });

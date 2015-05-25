@@ -1,4 +1,4 @@
-angular.module('epicBlotto').directive('mapView', function($rootScope, $http, $log, toaster, epGraph, pathModel){
+angular.module('epicBlotto').directive('mapView', function($rootScope, $http, $log, toaster, pathModel){
 
     function styleFeature(feature) {
         switch (feature.properties.nature) {
@@ -122,7 +122,6 @@ angular.module('epicBlotto').directive('mapView', function($rootScope, $http, $l
                         }
 
                     }
-                    epGraph.feedGraphData(res);
 
                 });
             };
@@ -247,6 +246,35 @@ angular.module('epicBlotto').directive('mapView', function($rootScope, $http, $l
                 }
             };
 
+            var findClosest = function(latLng, tolerance) {
+                var closest = null, closestDistance = Infinity;
+                var cursorPoint = map.latLngToLayerPoint(latLng);
+
+                var findClosestOnLine = function(line) {
+                    for (var i = 0; i < line.length; i++) {
+                        var pos = new L.LatLng(line[i][1], line[i][0]);
+                        var projectPos = map.latLngToLayerPoint( pos);
+                        var d = cursorPoint.distanceTo(projectPos);
+                        if (d < closestDistance){
+                            closest = pos;
+                            closestDistance = d;
+                        }
+                    }
+                };
+
+                _.each(lastRouteData, function(feature) {
+                    if (feature.geometry && feature.geometry.type === 'LineString') {
+                        findClosestOnLine(feature.geometry.coordinates);
+                    } else if (feature.geometry && feature.geometry.type === 'MultiLineString') {
+                        _.each(feature.geometry.coordinates, findClosestOnLine);
+                    }
+                });
+
+                if (closestDistance < tolerance && closest != null) {
+                    return closest;
+                }
+            };
+
             map.on('mousemove', function(e){
                 if (drawPathActive) {
                     if (!currentMouseMarker) {
@@ -260,7 +288,7 @@ angular.module('epicBlotto').directive('mapView', function($rootScope, $http, $l
                     }
 
                     // snap
-                    var closest = epGraph.findClosest(e.latlng, 15);
+                    var closest = findClosest(e.latlng, 15);
                     currentMouseMarker.setLatLng(closest ? closest : e.latlng);
 
                     // line to cursor

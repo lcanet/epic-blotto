@@ -1,4 +1,4 @@
-angular.module('epicBlotto').directive('mapView', function($rootScope, $http, $log, toaster, pathModel){
+angular.module('epicBlotto').directive('mapView', function($rootScope, $http, $log, $localStorage, toaster, pathModel){
 
     function styleFeature(feature) {
         switch (feature.properties.nature) {
@@ -99,12 +99,18 @@ angular.module('epicBlotto').directive('mapView', function($rootScope, $http, $l
         link: function(scope, elt, attrs) {
             L.Icon.Default.imagePath = 'images';
 
-            var map = L.map(elt[0], { zoomControl: true }).setView([45.2014, 6.67], 16);
+            var map = L.map(elt[0], { zoomControl: true });
 
             var routesLayer = L.geoJson([], {
                 style: styleFeature
             });
             routesLayer.addTo(map);
+
+            if ($localStorage.mapLastPosition){
+                map.setView(L.latLng($localStorage.mapLastPosition.lat, $localStorage.mapLastPosition.lon), $localStorage.mapLastPosition.zoom);
+            } else {
+                map.setView([45.2014, 6.67], 16);
+            }
 
             var lastRouteData;
 
@@ -136,9 +142,16 @@ angular.module('epicBlotto').directive('mapView', function($rootScope, $http, $l
                 }
             });
 
-            map.on('moveend', refreshLayer);
-            map.on('zoomend', refreshLayer);
+            map.on('moveend zoomend', refreshLayer);
 
+            map.on('moveend zoomend', function(){
+                var center = map.getCenter();
+                $localStorage.mapLastPosition = {
+                    lat: center.lat,
+                    lon: center.lng,
+                    zoom: map.getZoom()
+                };
+            });
 
             // base layer
 

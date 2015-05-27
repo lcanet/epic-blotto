@@ -4,7 +4,7 @@ var db = require('./db'),
     _ = require('lodash');
 
 var DEG_TO_RAD = Math.PI / 180;
-var BUFFER_FETCH_FACTOR = 0.5;
+var BUFFER_FETCH_FACTORS = [0.2, 0.5, 1, 2, 4, 8, 16];
 var index = 0;
 
 function findOrCreateNode(nodesTable, coord) {
@@ -186,31 +186,26 @@ function calculatePath(routesNodeGraph, fromCoordinate, toCoordinate) {
     var path = [];
     var lastStep = closedList[end.id];
     if (!lastStep) {
-        winston.warn('Cannot find any path to end node');
-        // use direct line as a fallback
-        path.push(pseudoNode(fromCoordinate));
+        return [];
+    }
+
+    // add endnode-endpoint direct line
+    if (!positionEqual(end, toCoordinate)) {
         path.push(pseudoNode(toCoordinate));
-
-    } else {
-
-        // add endnode-endpoint direct line
-        if (!positionEqual(end, toCoordinate)) {
-            path.push(pseudoNode(toCoordinate));
+    }
+    var currentBackStep = lastStep;
+    while (currentBackStep) {
+        path.push(currentBackStep.to);
+        if (currentBackStep.from) {
+            currentBackStep = closedList[currentBackStep.from.id];
+        } else {
+            currentBackStep = null;
         }
-        var currentBackStep = lastStep;
-        while (currentBackStep) {
-            path.push(currentBackStep.to);
-            if (currentBackStep.from) {
-                currentBackStep = closedList[currentBackStep.from.id];
-            } else {
-                currentBackStep = null;
-            }
-        }
+    }
 
-        // add first direct line
-        if (!positionEqual(start, fromCoordinate)) {
-            path.push(pseudoNode(fromCoordinate));
-        }
+    // add first direct line
+    if (!positionEqual(start, fromCoordinate)) {
+        path.push(pseudoNode(fromCoordinate));
     }
     path.reverse();
 
@@ -225,8 +220,7 @@ function calculatePath(routesNodeGraph, fromCoordinate, toCoordinate) {
     return path;
 }
 
-
-function findPath(fromCoordinate, toCoordinate, callback) {
+function findPathWithBuffer(fromCoordinate, toCoordinate, bufferIndex, callback) {
     var hrstart = process.hrtime();
 
     var minLat = Math.min(fromCoordinate[1], toCoordinate[1]);
@@ -234,8 +228,10 @@ function findPath(fromCoordinate, toCoordinate, callback) {
     var maxLat = Math.max(fromCoordinate[1], toCoordinate[1]);
     var maxLon = Math.max(fromCoordinate[0], toCoordinate[0]);
 
-    var dLat = BUFFER_FETCH_FACTOR * Math.abs(maxLat - minLat);
-    var dLon = BUFFER_FETCH_FACTOR * Math.abs(maxLon - minLon);
+
+    var currentBuffer = BUFFER_FETCH_FACTORS[bufferIndex];
+    var dLat = currentBuffer * Math.abs(maxLat - minLat);
+    var dLon = currentBuffer * Math.abs(maxLon - minLon);
 
     // add some buffer
     minLat -= dLat;
@@ -247,17 +243,37 @@ function findPath(fromCoordinate, toCoordinate, callback) {
         if (err) return callback(err);
         var nodes = buildGraph(results);
         var path = calculatePath(nodes, fromCoordinate, toCoordinate);
+
         var hrend = process.hrtime(hrstart);
         var timeMs = hrend[0] * 1000 + hrend[1]/1000000;
 
-        winston.log('info', 'Find path took %d ms. found %d nodes (graph size %d)',
+        if (path === null || path.length == 0) {
+
+            if (bufferIndex === (BUFFER_FETCH_FACTORS.length - 1)) {
+                winston.warn('Cannot find any path to end node at max buffer');
+                // use direct line as a fallback
+                path = [ pseudoNode(fromCoordinate), pseudoNode(toCoordinate) ]
+
+            } else {
+                return findPathWithBuffer(fromCoordinate, toCoordinate, bufferIndex + 1, callback);
+            }
+        }
+
+        winston.log('info', 'Find path took %d ms. found %d nodes (graph size %d), at buffer step %d',
             timeMs,
             path.length,
-            nodes.length
+            nodes.length,
+            bufferIndex
         );
         callback(null, path);
 
     });
+
+}
+
+
+function findPath(fromCoordinate, toCoordinate, callback) {
+    findPathWithBuffer(fromCoordinate, toCoordinate, 0, callback);
 }
 
 

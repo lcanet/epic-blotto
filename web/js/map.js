@@ -60,7 +60,7 @@ angular.module('epicBlotto').directive('mapView', function($rootScope, $http, $l
         onAdd: function (map) {
             var container = L.DomUtil.create('div', 'leaflet-bar');
             this._map = map;
-            this._button = this._createButton('D', 'draw', 'draw-tool', container, this._handler, this);
+            this._button = this._createButton('', 'draw', 'draw-tool fa fa-pencil', container, this._handler, this);
             return container;
         },
 
@@ -84,8 +84,16 @@ angular.module('epicBlotto').directive('mapView', function($rootScope, $http, $l
         }
     });
 
-    var mouseMarkerIcon = new L.DivIcon({className: 'mouse-marker-icon'});
-    var pathStepIcon = new L.DivIcon({className: 'path-step-icon'});
+    var pathStepIcon = L.AwesomeMarkers.icon({
+        icon: 'flag',
+        prefix: 'fa',
+        markerColor: 'red'
+    });
+    var mouseMarkerIcon = L.AwesomeMarkers.icon({
+        icon: 'flag-checkered',
+        prefix: 'fa',
+        markerColor: 'green'
+    });
 
 
     return {

@@ -94,6 +94,11 @@ angular.module('epicBlotto').directive('mapView', function($rootScope, $http, $l
         prefix: 'fa',
         markerColor: 'green'
     });
+    var zoomPointIcon = L.AwesomeMarkers.icon({
+        icon: 'search',
+        prefix: 'fa',
+        markerColor: 'yellow'
+    });
 
 
     return {
@@ -161,6 +166,7 @@ angular.module('epicBlotto').directive('mapView', function($rootScope, $http, $l
                 };
             });
 
+
             // base layer
 
             var baseLayer;
@@ -204,6 +210,7 @@ angular.module('epicBlotto').directive('mapView', function($rootScope, $http, $l
              */
             var currentMouseLine;
             var mouseTooltipPopup;
+
 
             new DrawControl(function(){
                 drawPathActive = !drawPathActive;
@@ -366,18 +373,37 @@ angular.module('epicBlotto').directive('mapView', function($rootScope, $http, $l
                     }
                 }
             });
+            var zoomPointMarker = null;
 
             scope.$on('mapZoomStep', function($evt, step){
                 var bounds = new L.LatLngBounds(step);
+                map.once('moveend', function(){
+                    if (zoomPointMarker) {
+                        map.removeLayer(zoomPointMarker);
+                        zoomPointMarker = null;
+                    }
+                    zoomPointMarker = new L.Marker(bounds.getCenter(), {icon: zoomPointIcon});
+                    zoomPointMarker.addTo(map);
+                });
                 map.fitBounds(bounds);
+            });
+
+            map.on('moveend zoomend', function(){
+                if (zoomPointMarker) {
+                    map.removeLayer(zoomPointMarker);
+                    zoomPointMarker = null;
+                }
             });
 
             scope.$on('mapZoomPoint', function($evt, feature){
                 if (feature && feature.geometry){
-                    map.setView(L.latLng(feature.geometry.coordinates[1],
-                        feature.geometry.coordinates[0]), 17);
+                    var pos = L.latLng(feature.geometry.coordinates[1],
+                        feature.geometry.coordinates[0]);
+
+                    map.setView(pos, 17);
                 }
             });
+
         }
     }
 

@@ -122,7 +122,16 @@ module.exports = function(grunt) {
                         cwd: 'web/libs/font-awesome',
                         src: ['fonts/*.*'],
                         dest: 'webdist'
+                    },
+                    {
+// leaflet-fa
+                        expand: true,
+                        dot: true,
+                        cwd: 'web/libs/Leaflet.awesome-markers/dist',
+                        src: ['images/*.*'],
+                        dest: 'webdist/css'
                     }
+
                 ]
             },
             styles: {

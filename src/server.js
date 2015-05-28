@@ -20,7 +20,11 @@ function sendError(res, message) {
     res.status(500).send(message || 'Sorry we have an error');
 }
 
-app.use('/web', express.static('web'));
+var env = process.env.NODE_ENV;
+var webDirectory = env === 'production' ? 'webdist' : 'web';
+winston.info('Using directory ' + webDirectory + ' for web pages');
+
+app.use('/web', express.static(webDirectory));
 
 app.get('/', function(req, res){
     res.redirect(301, '/web/index.html');

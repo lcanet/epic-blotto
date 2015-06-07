@@ -139,6 +139,25 @@ angular.module('epicBlotto').service('pathModel', function($http, $q, $rootScope
         return _.last(this.steps);
     };
 
+    /**
+     * Reload all steps
+     * @param steps
+     */
+    this.loadSteps = function(steps) {
+        var toLatLng = function(obj) {
+            return new L.LatLng(obj.lat, obj.lng, obj.alt);
+        };
+        this.steps = _.map(steps, function(origStep){
+            var step = _.extend({}, origStep);
+            // rebuild leaflet LatLng
+            step.from = toLatLng(step.from);
+            step.to = toLatLng(step.to);
+            step.line = _.map(step.line, toLatLng);
+            return step;
+        });
+        this.updateTotals();
+        $rootScope.$broadcast('pathModelChanged');
+    };
 
     /**
      *

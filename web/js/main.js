@@ -1,4 +1,4 @@
-angular.module('epicBlotto', ['ngRoute', 'ngAnimate', 'toaster', 'ngStorage']);
+angular.module('epicBlotto', ['ngRoute', 'ngAnimate', 'toaster', 'ngStorage', 'firebase']);
 
 angular.module('epicBlotto').run(['$timeout', function($timeout) {
     $timeout(function(){
@@ -8,7 +8,8 @@ angular.module('epicBlotto').run(['$timeout', function($timeout) {
     }, 50);
 }]);
 
-angular.module('epicBlotto').controller('mainViewController', function($rootScope, $scope, $http, pathModel, toaster){
+angular.module('epicBlotto').controller('mainViewController', function($rootScope, $q, $log, $scope, $http, pathModel, toaster){
+
 
     $scope.layers = [
         {
@@ -69,7 +70,7 @@ angular.module('epicBlotto').controller('mainViewController', function($rootScop
             toaster.pop('error', 'Error', 'Browser not supported');
 
         }
-    }
+    };
 
     $scope.geoloc = function() {
         if ($scope.geolocInput) {
@@ -80,6 +81,8 @@ angular.module('epicBlotto').controller('mainViewController', function($rootScop
             });
 
         }
-    }
+    };
+
+
 
 });

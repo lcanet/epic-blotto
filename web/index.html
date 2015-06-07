@@ -45,18 +45,50 @@
     </ul>
 </div>
 
+<div class="saved-list-panel" ng-controller="savedPathsController">
+    <div class="toolbar">
+        <a href="" ng-click="savePath()" title="Sauvegarder" ng-show="path.steps.length > 0">
+            <span class="fa fa-floppy-o"></span> Sauvegarder
+        </a>
+        <a href="" ng-click="loadPath()" title="Charger" >
+            <span class="fa fa-cloud-download"></span> Charger
+        </a>
+    </div>
+    <div ng-show="showSavedPaths">
+
+        <table class="step-list">
+            <tbody>
+            <tr ng-repeat="p in savedPaths">
+                <td>
+                    <a href="" ng-click="loadSavedPath(p)">{{ p.label }}</a>
+                </td>
+                <td>
+                    {{ p.distance / 1000 | number:1 }} km
+                </td>
+                <td>
+                    <a href="" ng-click="deleteSavedPath(p)">
+                        <span class="fa fa-trash"></span>
+                    </a>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+
+</div>
+
 <div class="step-list-panel" ng-show="path.steps.length > 0">
-    <table class="step-list">
+
+    <table class="step-list" >
         <thead>
         <tr>
             <th>Distance (m)</th>
             <th>Denivellé (m)</th>
             <th>Gradient</th>
             <th>
-                <a href="" ng-click="exportPath()" title="Export KML">
+                <a href="" ng-click="exportPath()" title="Export KML" ng-show="path.steps.length > 0">
                     <span class="fa fa-globe"></span>
                 </a>
-
             </th>
         </tr>
         </thead>
@@ -125,6 +157,8 @@
 <script src="libs/filesaver/FileSaver.js"></script>
 <script src="libs/ngstorage/ngStorage.js"></script>
 <script src="libs/Leaflet.awesome-markers/dist/leaflet.awesome-markers.js"></script>
+<script src="libs/firebase/firebase.js"></script>
+<script src="libs/angularfire/dist/angularfire.js"></script>
 <!-- endbuild -->
 
 
@@ -134,6 +168,7 @@
 <script src="js/pathModel.js"></script>
 <script src="js/filters.js"></script>
 <script src="js/altprofile.js"></script>
+<script src="js/savedpaths.js"></script>
 
 <!-- endbuild -->
 

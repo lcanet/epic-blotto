@@ -14,7 +14,8 @@
     "d3": "3.5.5",
     "filesaver": "eligrey/FileSaver.js",
     "ngstorage": "0.3.4",
-    "Leaflet.awesome-markers": "2.0.2"
+    "Leaflet.awesome-markers": "2.0.2",
+    "angularfire": "*"
   },
   "resolutions": {
     "angular": "1.3.15"

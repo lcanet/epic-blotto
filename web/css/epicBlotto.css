@@ -75,6 +75,22 @@
 
 }
 
+.saved-list-panel {
+    position: absolute;
+    top: 0;
+    left: 40px;
+    background: white;
+    margin: 10px;
+    border: 1px solid black;
+    padding: 3px;
+    width: 250px;
+    overflow-y: auto;
+
+}
+.saved-list-panel table {
+    width: 100%;
+}
+
 .step-list thead.total {
     font-weight: bold;
     background-color: #eee;

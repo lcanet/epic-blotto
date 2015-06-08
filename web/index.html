@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="libs/Leaflet.awesome-markers/dist/leaflet.awesome-markers.css"/>
     <link rel="stylesheet" href="libs/font-awesome/css/font-awesome.min.css"/>
     <link rel="stylesheet" href="libs/AngularJS-Toaster/toaster.min.css"/>
+    <link rel="stylesheet" href="libs/jquery-ui/themes/hot-sneaks/jquery-ui.css"/>
     <!-- endbuild -->
     <!-- build:css css/app.css -->
     <link rel="stylesheet" href="css/epicBlotto.css"/>
@@ -30,11 +31,7 @@
 </map-view>
 
 <div class="layer-switcher">
-    <form ng-submit="geoloc()" class="geoloc-form">
-        <input type="text" class="geoloc-text" ng-enter="" ng-model="geolocInput"/>
-        <a class="geoloc-btn" href="" ng-click="geoloc()">Loc</a>
-
-    </form>
+    <location-autocomplete></location-autocomplete>
     <ul class="layer-list">
         <li ng-class="{'active': showRouteLayer}" ng-click="toggleRouteLayer()">
             Routes
@@ -159,6 +156,7 @@
 <script src="libs/Leaflet.awesome-markers/dist/leaflet.awesome-markers.js"></script>
 <script src="libs/firebase/firebase.js"></script>
 <script src="libs/angularfire/dist/angularfire.js"></script>
+<script src="libs/jquery-ui/jquery-ui.js"></script>
 <!-- endbuild -->
 
 
@@ -169,6 +167,7 @@
 <script src="js/filters.js"></script>
 <script src="js/altprofile.js"></script>
 <script src="js/savedpaths.js"></script>
+<script src="js/directives.js"></script>
 
 <!-- endbuild -->
 

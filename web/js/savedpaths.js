@@ -46,9 +46,8 @@ angular.module('epicBlotto').controller('savedPathsController', function($scope,
         var defer = $q.defer();
         if (!username) {
 
-            prompt('Votre nom ?').then(function(){
-                username = window.prompt('Votre nom d\'utilisateur ?');
-                $localStorage.username = username;
+            prompt('Votre nom ?').then(function(user){
+                $localStorage.username = username = username;
                 buildFirebase();
             });
         } else {

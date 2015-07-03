@@ -5,7 +5,10 @@ var express = require('express'),
     _ = require('lodash'),
     request = require('request'),
     db = require('./db'),
-    graph = require('./graph')
+    graph = require('./graph'),
+    config = require('./config.json'),
+    fs = require('fs'),
+    path = require('path')
     ;
 
 winston.level = 'debug';
@@ -66,7 +69,7 @@ app.get('/path', function(req, res){
     });
 });
 
-app.get('/geoportail', function(req, res){
+function downloadTile(req, res, saveFileName) {
     var opts = {
         url: 'http://wxs.ign.fr/sjpqaae6rdmdyem05mhp1vmt/geoportail/wmts',
         encoding: null,
@@ -79,13 +82,59 @@ app.get('/geoportail', function(req, res){
     if (ip != -1) {
         opts.url += qs.substring(ip);
     }
+    winston.info('downloading file ' + opts.url);
     request(opts, function(err, proxyResp, body){
         if (err) {
             return sendError(res, err);
         }
         res.contentType( proxyResp.headers['content-type']);
         res.send(body);
+
+        if (saveFileName) {
+            fs.writeFile(saveFileName, body, 'binary', function(err){
+                if (err) {
+                    winston.error('Error writing file', err);
+                }
+            });
+        }
     });
+
+}
+
+function isCacheable(layer) {
+    return _.contains(config.cacheLayers, layer);
+}
+
+app.get('/geoportail', function(req, res){
+    var layer = req.query['LAYER'];
+    if (config.tilecache && isCacheable(layer)) {
+        var x = req.query['TILEROW'];
+        var y = req.query['TILECOL'];
+        var z = req.query['TILEMATRIX'];
+        var format = req.query['FORMAT'];
+        if (format && format.indexOf('/') !== -1) {
+            format = format.substring(format.indexOf('/') + 1);
+        } else {
+            format = "jpeg";
+        }
+
+        if (x && y && z) {
+            var cachedFile = path.join(config.cachedir, z + '_' + x + '_' + y + '.' + format);
+            fs.exists(cachedFile, function(exists){
+                if (exists) {
+                    winston.info('Serving cached file ' + cachedFile);
+                    res.sendFile(cachedFile);
+                } else {
+                    downloadTile(req, res, cachedFile);
+                }
+            });
+        } else {
+            downloadTile(req, res);
+        }
+
+    } else {
+        downloadTile(req, res);
+    }
 
 });
 

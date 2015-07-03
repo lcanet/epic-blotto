@@ -1,0 +1,8 @@
+{
+  "tilecache": true,
+  "cachedir": "d:/geo/tilecache",
+  "cacheLayers": [
+    "GEOGRAPHICALGRIDSYSTEMS.MAPS"
+  ]
+
+}

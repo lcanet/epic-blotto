@@ -112,7 +112,10 @@ angular.module('epicBlotto').directive('mapView', function($rootScope, $http, $l
         link: function(scope, elt, attrs) {
             L.Icon.Default.imagePath = 'images';
 
-            var map = L.map(elt[0], { zoomControl: true });
+            var map = L.map(elt[0], {
+                maxZoom: 20,
+                zoomControl: true
+            });
 
             var routesLayer = L.geoJson([], {
                 style: styleFeature
@@ -178,7 +181,8 @@ angular.module('epicBlotto').directive('mapView', function($rootScope, $http, $l
                 }
                 if (l) {
                     baseLayer = L.tileLayer(l.url, {
-                        attribution: l.attribution
+                        attribution: l.attribution,
+                        maxZoom: 20,
                     });
                     baseLayer.addTo(map);
 

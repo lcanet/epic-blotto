@@ -15,17 +15,21 @@ angular.module('epicBlotto').controller('mainViewController', function($rootScop
         {
             url: 'http://{s}.tile.osm.org/{z}/{x}/{y}.png',
             name: 'OSM',
-            attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
+            attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors',
+            subdomains: 'abc'
+
         },
         {
-            url: '/geoportail?SERVICE=WMTS&VERSION=1.0.0&REQUEST=GetTile&LAYER=GEOGRAPHICALGRIDSYSTEMS.MAPS&STYLE=normal&FORMAT=image/jpeg&TILEMATRIXSET=PM&TILEMATRIX={z}&TILEROW={y}&TILECOL={x}',
+            url: 'http://rando-tiles{s}.bourrin.info/geoportail?SERVICE=WMTS&VERSION=1.0.0&REQUEST=GetTile&LAYER=GEOGRAPHICALGRIDSYSTEMS.MAPS&STYLE=normal&FORMAT=image/jpeg&TILEMATRIXSET=PM&TILEMATRIX={z}&TILEROW={y}&TILECOL={x}',
             name: 'Scan 25',
-            attribution: 'IGN'
+            attribution: 'IGN',
+            subdomains: '0123'
         },
         {
-            url: '/geoportail?SERVICE=WMTS&VERSION=1.0.0&REQUEST=GetTile&LAYER=ORTHOIMAGERY.ORTHOPHOTOS&STYLE=normal&FORMAT=image/jpeg&TILEMATRIXSET=PM&TILEMATRIX={z}&TILEROW={y}&TILECOL={x}',
+            url: 'http://rando-tiles{s}.bourrin.info/geoportail?SERVICE=WMTS&VERSION=1.0.0&REQUEST=GetTile&LAYER=ORTHOIMAGERY.ORTHOPHOTOS&STYLE=normal&FORMAT=image/jpeg&TILEMATRIXSET=PM&TILEMATRIX={z}&TILEROW={y}&TILECOL={x}',
             name: 'Orthophoto',
-            attribution: 'IGN'
+            attribution: 'IGN',
+            subdomains: '0123'
         }
     ];
 

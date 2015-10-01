@@ -183,6 +183,7 @@ angular.module('epicBlotto').directive('mapView', function($rootScope, $http, $l
                     baseLayer = L.tileLayer(l.url, {
                         attribution: l.attribution,
                         maxZoom: 20,
+                        subdomains: l.subdomains
                     });
                     baseLayer.addTo(map);
 
